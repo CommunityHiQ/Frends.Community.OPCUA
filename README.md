@@ -1,6 +1,6 @@
 # Frends.Community.Email
 
-![MyGet](https://img.shields.io/myget/frends-community/v/Frends.Community.OPCUA) [![License: UNLICENSED](https://img.shields.io/badge/License-UNLICENSED-yellow.svg)](https://opensource.org/licenses/UNLICENSED) 
+![MyGet](https://img.shields.io/myget/frends-community/v/Frends.Community.OPCUA) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 
 Frends task for reading and writing OPC UA data.
 
