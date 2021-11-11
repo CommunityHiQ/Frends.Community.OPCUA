@@ -13,7 +13,10 @@ namespace Frends.Community.OPCUA.Tests
             var result = await OPCUATasks.ReadTags(
                 new OPCUAConnectionProperties
                 {
-                    URL = ""
+                    AcceptUntrustedCertificates = true,
+                    URL = "opc.tcp://127.0.0.1:49320",
+                    Username = "opcguru2",
+                    Password = "opcgurupassword"
                 },
                 new ReadTagsParameters
                 {
@@ -24,7 +27,7 @@ namespace Frends.Community.OPCUA.Tests
                         new TagToRead { NodeId = "ns=3;i=1003", ExpectedType = typeof(double) },
                         new TagToRead { NodeId = "ns=3;i=1004", ExpectedType = typeof(double) },
                         new TagToRead { NodeId = "ns=3;i=1005", ExpectedType = typeof(double) },
-                        new TagToRead { NodeId = "ns=3;i=1009", ExpectedType = typeof(double) },
+                        new TagToRead { NodeId = "ns=2;s=Channel1.Device1.Tag1", ExpectedType = typeof(double) },
                     }
                 });
             Assert.AreEqual(6, result.TagValues.Count);

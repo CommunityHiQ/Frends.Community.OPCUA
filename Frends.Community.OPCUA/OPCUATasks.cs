@@ -11,12 +11,25 @@ namespace Frends.Community.OPCUA
 
     public class ReadTagsOutput
     {
-        public Dictionary<string, object> TagValues { get; set; }
+        public Dictionary<string, TagReadResult> TagValues { get; set; }
+    }
+
+    public class TagReadResult
+    {
+        public object Value { get; set; }
+
+        public string Error { get; set; }
     }
 
     public class OPCUAConnectionProperties
     {
+        public bool AcceptUntrustedCertificates { get; set; }
+
         public string URL { get; set; }
+
+        public string Username { get; set; }
+
+        public string Password { get; set; }
     }
 
     public class ReadTagsParameters
@@ -67,10 +80,11 @@ namespace Frends.Community.OPCUA
                 var listErrors = new List<ServiceResult>();
                 session.ReadValues(nodes, expectedTypes, out listValues, out listErrors);
 
-                var result = new Dictionary<string, object>();
+                var result = new Dictionary<string, TagReadResult>();
                 for (var i = 0; i < parameters.TagsToRead.Length; i++)
                 {
-                    result.Add(parameters.TagsToRead[i].NodeId, listValues[i]);
+                    var tagReadResult = new TagReadResult { Value = listValues[i], Error = listErrors[i]?.ToLongString() };
+                    result.Add(parameters.TagsToRead[i].NodeId, tagReadResult);
                 }
 
                 return new ReadTagsOutput { TagValues = result };
@@ -81,26 +95,40 @@ namespace Frends.Community.OPCUA
         {
             var selectedEndpoint = CoreClientUtils.SelectEndpoint(connectionProperties.URL, false);
 
-            ApplicationInstance application = new ApplicationInstance
-            {
-                ApplicationName = "FRENDS",
-                ApplicationType = ApplicationType.Client,
-                ConfigSectionName = "FRENDS"
-            };
-
             //ApplicationConfiguration config = await application.LoadApplicationConfiguration(false);
-            application.ApplicationConfiguration = new ApplicationConfiguration
+            var applicationConfiguration = new ApplicationConfiguration
             {
                 ClientConfiguration = new ClientConfiguration
                 {
                     WellKnownDiscoveryUrls = new[] { "opc.tcp://{0}:4840/UADiscovery" },
                     DiscoveryServers = new EndpointDescriptionCollection()
+                },
+                CertificateValidator = new CertificateValidator
+                {
+                    AutoAcceptUntrustedCertificates = connectionProperties.AcceptUntrustedCertificates
                 }
             };
 
-            var endpointConfiguration = EndpointConfiguration.Create(application.ApplicationConfiguration);
+            //application.ApplicationConfiguration.SecurityConfiguration.AutoAcceptUntrustedCertificates = true;
+            //application.Server.CertificateValidator.AutoAcceptUntrustedCertificates = true;
+
+            var endpointConfiguration = EndpointConfiguration.Create(applicationConfiguration);
             var endpoint = new ConfiguredEndpoint(null, selectedEndpoint, endpointConfiguration);
-            var session = await Session.Create(application.ApplicationConfiguration, endpoint, false, "FRENDS", 60000, new UserIdentity(new AnonymousIdentityToken()), null);
+
+            var userIdentity = new UserIdentity(new AnonymousIdentityToken());
+            if (!string.IsNullOrWhiteSpace(connectionProperties.Username))
+            {
+                userIdentity = new UserIdentity(connectionProperties.Username, connectionProperties.Password);
+            }
+
+            var session = await Session.Create(
+                applicationConfiguration,
+                endpoint,
+                false,
+                "FRENDS",
+                60000,
+                userIdentity,
+                null);
             return session;
         }
     }
