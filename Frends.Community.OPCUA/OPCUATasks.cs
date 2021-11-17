@@ -3,6 +3,8 @@ using Opc.Ua.Client;
 using Opc.Ua.Configuration;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,12 +25,27 @@ namespace Frends.Community.OPCUA
 
     public class OPCUAConnectionProperties
     {
+        /// <summary>
+        /// Allows untrusted / self-issued certificates
+        /// </summary>
         public bool AcceptUntrustedCertificates { get; set; }
 
+        /// <summary>
+        /// OPC UA URL
+        /// </summary>
+        [DisplayFormat(DataFormatString = "Text")]
+        [DefaultValue("opc.tcp://127.0.0.1:49320")]
         public string URL { get; set; }
 
+        /// <summary>
+        /// Username to use for connecting. Leave empty for anonymous login
+        /// </summary>
         public string Username { get; set; }
 
+        /// <summary>
+        /// Password to use for connecting. Leave empty for anonymous login
+        /// </summary>
+        [PasswordPropertyText(true)]
         public string Password { get; set; }
     }
 
@@ -70,6 +87,12 @@ namespace Frends.Community.OPCUA
             }
         }
 
+        /// <summary>
+        /// Read tag values from the OPC UA server.
+        /// </summary>
+        /// <param name="connectionProperties">Connection properties.</param>
+        /// <param name="parameters">Parameters for reading tags values.</param>
+        /// <returns>Data of read tags with possible errors included.</returns>
         public static async Task<ReadTagsOutput> ReadTags(OPCUAConnectionProperties connectionProperties, ReadTagsParameters parameters)
         {
             using (var session = await CreateOpcSession(connectionProperties))
